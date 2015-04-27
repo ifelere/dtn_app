@@ -1,1 +1,22 @@
 /* Empty. Add your own CSS if you like */
+.text-center {
+    text-align: center;
+}
+
+.pull-right {
+    float: right;
+}
+
+.pull-right:after {
+    clear: both;
+}
+
+.clearfix : {
+    clear: both;
+    display: block;
+}
+
+.tags .tag {
+    margin-left: 7px;
+    background-color: 
+}

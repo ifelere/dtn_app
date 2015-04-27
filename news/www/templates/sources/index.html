@@ -1,0 +1,11 @@
+<div class="list" ng-show="items.length > 0" ng-repeat="item in items">
+    <a class="item clearfix" href="#" ng-click="details(item)">
+        <span class="date pull-right">{{::item.publishedDate | toDate | date:'dd.mm.yy'}}</span>
+        <b ng-bind-html="::item.title"></b>
+        <p ng-bind-html="::item.contentSnippet"></p>
+    </a>
+</div>
+<p ng-if="items.length===0" class="text-center">
+    <em>
+    There are no enteries found under {{::source.name}}</em>
+</p>

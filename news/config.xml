@@ -2,10 +2,10 @@
 <widget id="com.ionicframework.news268838" version="0.0.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
   <name>news</name>
   <description>
-        An Ionic Framework and Cordova project.
+        Serve news from Daily Times of Nigeria
     </description>
-  <author email="hi@ionicframework" href="http://ionicframework.com/">
-      Ionic Framework Team
+  <author email="ifelere@gmail.com" href="https://ng.linkedin.com/pub/ifelere-oyetola/27/977/92a">
+      Ifelere Oyetola
     </author>
   <content src="index.html"/>
   <access origin="*"/>

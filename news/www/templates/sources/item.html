@@ -1,0 +1,26 @@
+<section>
+    <header>
+        <a class="pull-right" ng-click="showAll()">
+            <i class="ion-close"></i>
+        </a>
+        <h3 ng-bind-html="::detailItem.title"></h3>
+        <span class="date">{{::detailItem.publishedDate | toDate | date:'dd.mm.yyyy'}}</span>
+        <span ng-if="detailItem.author" >
+            <br />
+            By {{::detailItem.author}}
+        </span>
+    </header>
+    <article>
+        <div ng-bind-html="::detailItem.content">
+
+        </div>
+        <p class="tags text-center">
+            <span class="tag" ng-repeat="cat in detailItem.categories">{{::cat}}</span>
+        </p>
+        <p class="text-center">
+            <a href="#" ng-click="openInBrowser(detailItem.link)">
+                View In Browser
+            </a>
+        </p>
+    </article>
+</section>
