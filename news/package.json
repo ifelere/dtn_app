@@ -1,6 +1,6 @@
 {
-  "name": "news",
-  "version": "1.0.0",
+  "name": "DTN",
+  "version": "1.0.1",
   "description": "news: An Ionic project",
   "dependencies": {
     "gulp": "^3.5.6",
