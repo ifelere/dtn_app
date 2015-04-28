@@ -11,12 +11,25 @@
     clear: both;
 }
 
+.entry-article {
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
 .clearfix : {
     clear: both;
     display: block;
 }
 
 .tags .tag {
-    margin-left: 7px;
-    background-color: 
+    background-color: #c0a0a0;
+    -moz-border-radius: 4px;
+    -webkit-border-radius: 4px;
+    -o-border-radius: 4px;
+    -ie-border-radius: 4px;
+    border-radius: 4px;
+    padding: 8px;
+}
+
+.tags .tag:not(:first-child) {
+    margin-left: 10px;
 }

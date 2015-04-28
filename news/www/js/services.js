@@ -2,7 +2,30 @@ angular.module('dtn.services', [])
 
 .factory("SourceItem", function ($http, $q, dtnAnchor) {
     var cached = {};
-    var tryGetCached = function (url) {
+
+    var getCachAge = function (url) {
+        var key = "age___" + url;
+        if (angular.isDefined(localStorage)) {
+            var g = localStorage.getItem(key);
+            if (g) {
+                return parseInt(g, 10);
+            }
+        }else if (angular.isDefined(cached[key])) {
+            return cached[key];
+        }
+        return 0;
+    };
+
+    var setCacheAge = function (url, time) {
+        var key = "age___" + url;
+        if (angular.isDefined(localStorage)) {
+            localStorage.setItem(key, String(time));
+        }else{
+            cached[key] = time;
+        }
+    };
+
+    var tryGetCached = function (url, ignoreAge) {
         var deferred = $q.defer();
         if (angular.isDefined(localStorage)) {
             var data = localStorage.getItem(url);
@@ -27,8 +50,7 @@ angular.module('dtn.services', [])
         }
     };
 
-    var tryGetFromHttp = function (url) {
-        var deferred = $q.defer();
+    var useGoogleApi = function (url, deferred) {
         var options = {};
         options.params = {
             q : url,
@@ -40,16 +62,23 @@ angular.module('dtn.services', [])
         $http.jsonp("http://ajax.googleapis.com/ajax/services/feed/load", options).
         success(function(data, status) {
             data = data.responseData || data;
-
-            angular.forEach(data.feed.entries,function (e) {
-                e.content = dtnAnchor.targetBlank(e.content);
+            angular.forEach(data.feed.entries, function (e) {
+                var c = dtnAnchor.targetBlank(e.content);
+                if (c) {
+                    e.content = c;
+                }
             });
-
             deferred.resolve(data);
             cacheResult(data, url);
         }).error(function (err) {
             deferred.reject(err);
         });
+
+    };
+
+    var tryGetFromHttp = function (url) {
+        var deferred = $q.defer();
+        useGoogleApi(url, deferred);
         return deferred.promise;
     };
 
@@ -67,8 +96,14 @@ angular.module('dtn.services', [])
             })
             .then(function (data) {
                 deferred.resolve(data);
-            }).catch (function (err) {
-                deferred.reject(err);
+            })
+            .catch (function (err) {
+                tryGetCached(url)
+                .then(function (data) {
+                    deferred.resolve(data);
+                }, function () {
+                    deferred.reject(err);
+                });
             });
             return deferred.promise;
         },
@@ -76,8 +111,8 @@ angular.module('dtn.services', [])
             var deferred = $q.defer();
             tryGetCached(url)
             .then(function (data) {
-                if (data && data.feeds) {
-                    deferred.resolve(data.feeds.entries[index]);
+                if (data && data.feed) {
+                    deferred.resolve(data.feed.entries[index]);
                 }else {
                     deferred.resolve(null);
                 }
@@ -91,9 +126,15 @@ angular.module('dtn.services', [])
     //ensure that all anchors target '_blank'
     return {
         targetBlank : function (content) {
-            var c = angular.element(content);
-            c.find("a").attr("target", "_blank");
+            //put a in a wrapping tag
+            var c = angular.element("<div>" + content + "</div>");
+            var aa = c.find("a");
+            angular.forEach(aa, function (a) {
+                var an = angular.element(a);
+                an.attr("href", "#");
+            });
             content = c.html();
+            return content;
         }
     };
 })

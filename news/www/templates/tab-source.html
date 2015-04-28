@@ -1,16 +1,8 @@
 <ion-view view-title="{{source.title || ''}}">
-  <ion-content class="padding">
-    <div ng-if="loading" class="text-center" style="padding-top: 10%;">
-
-        <p><ion-spinner icon="spiral"></ion-spinner></p>
-    </div>
+  <ion-content>
+    <p ng-if="loading" class="text-center" style="padding-top: 10%;"><ion-spinner icon="spiral"></ion-spinner></p>
     <div ng-show="!loading">
-        <div ng-show="showDetails">
-            <ng-include src="'templates/sources/item.html'"></ng-include>
-        </div>
-        <div ng-show="!showDetails">
-            <ng-include src="'templates/sources/index.html'"></ng-include>
-        </div>
+        <ng-include src="'templates/sources/index.html'"></ng-include>
     </div>
   </ion-content>
 </ion-view>

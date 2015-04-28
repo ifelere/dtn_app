@@ -70,6 +70,8 @@ angular.module('dtn', ['ionic', 'dtn.controllers', 'dtn.services'])
             templateUrl : "templates/tab-source.html",
             controller : "SourceCtrl"
         };
+
+
         var key = "sources." + t, url = "/" + t;
         p = p.state(key, {
           url: url,
@@ -77,6 +79,22 @@ angular.module('dtn', ['ionic', 'dtn.controllers', 'dtn.services'])
               name : t
           },
           views: views
+      });
+      views = {};
+
+      //this state should be a sibbling
+      //make a template for displaying details
+      views[t] = {
+          templateUrl : "templates/sources/entry.html",
+          controller : "EntryCtrl"
+      };
+
+      p = p.state(key + "-entry", {
+          url : "/" + t + "/entry/{index}",
+          data : {
+              name : t
+          },
+          views : views
       });
 
     });

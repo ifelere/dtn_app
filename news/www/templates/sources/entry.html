@@ -1,0 +1,40 @@
+<ion-view view-title="{{title || ''}}">
+  <ion-content class="padding">
+    <div ng-if="loading" class="text-center" style="padding-top: 10%;">
+        <p><ion-spinner icon="spiral"></ion-spinner></p>
+    </div>
+    <div ng-show="!loading">
+        <section ng-show="entry !== undefined">
+            <header>
+                <a class="pull-right" ng-click="goBack()">
+                    <i class="ion-close"></i>
+                </a>
+                <h3 ng-bind-html="::entry.title"></h3>
+                <span class="date">{{::entry.publishedDate | toDate | date:'dd.mm.yyyy'}}</span>
+                <span ng-if="entry.author" >
+                    <br />
+                    By <u>{{::entry.author}}</u>
+                </span>
+            </header>
+            <div class="entry-article">
+                <div ng-bind-html="::entry.content">
+
+                </div>
+                <p>&nbsp;</p>
+                <p class="tags text-center" ng-if="entry.categories.length>0">
+                    <b>Tags:</b> &nbsp;
+                    <span class="tag" ng-repeat="cat in entry.categories track by $index">
+                        <span ng-if="$index > 0">&nbsp;</span>
+                        {{::cat}}
+                    </span>
+                </p>
+                <p class="text-center">
+                    <a href="#" ng-click="openInBrowser(entry.link)">
+                        View In Browser
+                    </a>
+                </p>
+            </div>
+        </section>
+    </div>
+  </ion-content>
+</ion-view>

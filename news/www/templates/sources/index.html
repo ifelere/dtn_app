@@ -1,5 +1,5 @@
-<div class="list" ng-show="items.length > 0" ng-repeat="item in items">
-    <a class="item clearfix" href="#" ng-click="details(item)">
+<div class="list" ng-show="items.length > 0">
+    <a class="item clearfix" href="#" ng-click="details(item, $index)" ng-repeat="item in items">
         <span class="date pull-right">{{::item.publishedDate | toDate | date:'dd.mm.yy'}}</span>
         <b ng-bind-html="::item.title"></b>
         <p ng-bind-html="::item.contentSnippet"></p>
