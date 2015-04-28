@@ -20,6 +20,9 @@
     display: block;
 }
 
+.tags {
+    line-height: 300%;
+}
 .tags .tag {
     background-color: #c0a0a0;
     -moz-border-radius: 4px;
