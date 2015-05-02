@@ -17,12 +17,15 @@
                 </span>
             </header>
             <div class="entry-article">
+                <p class="text-center" >
+                    <img entry-image="entry" show-placeholder="false" />
+                </p>
                 <div ng-bind-html="::entry.content">
 
                 </div>
                 <p>&nbsp;</p>
                 <p class="tags text-center" ng-if="entry.categories.length>0">
-                    <b>Tags:</b> &nbsp;
+                    <b>Tags:</b>
                     <span class="tag" ng-repeat="cat in entry.categories track by $index">
                         <span ng-if="$index > 0">&nbsp;</span>
                         {{::cat}}

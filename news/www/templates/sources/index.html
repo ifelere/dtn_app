@@ -1,5 +1,6 @@
 <div class="list" ng-show="items.length > 0">
-    <a class="item item-text-wrap clearfix" href="#" ng-click="details(item, $index)" ng-repeat="item in items">
+    <a class="item item-thumbnail-left item-text-wrap" href="#" ng-click="details(item, $index)" ng-repeat="item in items">
+        <img entry-image="item" data-index="{{::$index}}" />
         <b ng-bind-html="::item.title"></b>&nbsp;&nbsp;&nbsp;&nbsp;
         <!-- <span class="date">{{::item.publishedDate | toDate | date:'dd.mm.yy'}}</span> -->
         <p ng-bind-html="::item.contentSnippet"></p>

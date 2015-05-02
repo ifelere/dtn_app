@@ -1,5 +1,38 @@
 angular.module('dtn.services', [])
 
+.factory("dtnStore", function () {
+    var __cache = {};
+    return {
+        get : function (key, json) {
+            json = json || false;
+            if (angular.isDefined(localStorage)) {
+                var v = localStorage.getItem(key);
+                if (json) {
+                    return angular.fromJson(v);
+                }
+                return v;
+            }
+            if (angular.isDefined(__cache[key])) {
+                return __cache[key];
+            }
+            return null;
+        },
+
+        set : function (key, value) {
+            if (angular.isDefined(localStorage)) {
+                if (angular.isObject(value)) {
+                    localStorage.setItem(key, angular.toJson(value));
+                }else {
+                    localStorage.setItem(key, String(value));
+                }
+            }else {
+                __cache[key] = value;
+            }
+        }
+    };
+
+})
+
 .factory("SourceItem", function ($http, $q, dtnAnchor) {
     var cached = {};
 
@@ -209,5 +242,128 @@ angular.module('dtn.services', [])
             return new Date(val);
         }
         return val;
+    };
+})
+.directive("entryImage", function ($http, $timeout, dtnStore) {
+    var extractors = [];
+    extractors.push(function metaSource(html) {
+        var metas = html.find("meta");
+        for (var i = 0, len = metas.length; i < len; i++) {
+            var meta = angular.element(metas[i]);
+            var a = meta.attr("property");
+            if ("og:image" === a || "og:image:url" === a) {
+                return meta.attr("content");
+            }
+        }
+        return false;
+    });
+    var imageSearch = /\<img\s+src\=["'](\S+)["']/i;
+    extractors.push(function (html) {
+        var search = imageSearch.exec(html);
+        if (search) {
+            return search[1];
+        }
+        return false;
+    });
+
+    function findImage(link, callback) {
+        var r = /og\:image/,
+            contentGrabber = /content=['"](\S+)['"]/;
+
+        var getMetaList = function (results) {
+            if (angular.isArray(results)) {
+                return results;
+            }
+            return results.meta || [];
+        };
+
+        $http.jsonp("https://query.yahooapis.com/v1/public/yql", {
+            params : {
+                q : "select * from html where url='" + link + "' and xpath='//meta'",
+                callback : "JSON_CALLBACK"
+            }
+        })
+        .success(function (data) {
+            var results = data.results;
+            if (results) {
+                var meta = _.find(getMetaList(results), function (m) {
+                    if (angular.isString(m)) {
+                        return r.test(m);
+                    }
+                    return r.test(m.property);
+                });
+                if (meta) {
+                    if (angular.isString(meta)) {
+                        return callback(contentGrabber.exec(meta)[1]);
+                    }
+                    return meta.content;
+                }
+            }
+            callback('');
+        });
+
+
+        // $http.get(link)
+        // .success(function (html) {
+        //     html = angular.element(html);
+        //     for (var j = 0, len = extractors.length; j < len; j++) {
+        //         var c = extractors[j](html);
+        //         if (c) {
+        //             return callback(c, link);
+        //         }
+        //     }
+        //     //still 'return' with empty data
+        //     callback('', link);
+        // });
+
+    }
+
+    return {
+        restrict : 'AC',
+        link : function (scope, ele, attr) {
+            if (attr.showPlaceholder !== 'false') {
+                var index = parseInt(attr.index || '0', 10);
+
+                var defaultImages = [
+                    '/img/placeholder1_exp.png',
+                    '/img/placeholder2_exp.png'
+                ];
+
+                ele.attr("src", defaultImages[index % 2]);
+            }else {
+                ele.addClass("hidden");
+            }
+
+            var kill = scope.$watch(function () {
+                return scope[attr.entryImage];
+            }, function (entry) {
+                if (entry) {
+                    kill();
+                    if (entry.imageSource) {
+                        ele.attr("src", entry.imageSource);
+                    }else {
+                        var link = entry.link;
+                        var key = "image_" + link;
+                        var cachedUrl = dtnStore.get(key);
+                        if (cachedUrl) {
+                            ele.attr("src", cachedUrl);
+                            ele.removeClass("hidden");
+                        }else {
+                            $timeout(function () {
+                                findImage(link, function (src) {
+                                    //store in cache so that even if an image was not found another attempt is not made to get it
+                                    dtnStore.set(key, src);
+                                    if (src) {
+                                        entry.imageSource = src;
+                                        ele.attr("src", src);
+                                        ele.removeClass("hidden");
+                                    }
+                                });
+                            });
+                        }
+                    }
+                }
+            });
+        }
     };
 });
