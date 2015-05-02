@@ -345,9 +345,13 @@ angular.module('dtn.services', [])
                         var link = entry.link;
                         var key = "image_" + link;
                         var cachedUrl = dtnStore.get(key);
-                        if (cachedUrl) {
-                            ele.attr("src", cachedUrl);
-                            ele.removeClass("hidden");
+                        //if the enty has not been cached at all then it should be null or undefined
+                        if (cachedUrl !== null && cachedUrl !== undefined) {
+                            //change only if not an empty string
+                            if (cachedUrl) {
+                                ele.attr("src", cachedUrl);
+                                ele.removeClass("hidden");
+                            }
                         }else {
                             $timeout(function () {
                                 findImage(link, function (src) {
@@ -361,6 +365,7 @@ angular.module('dtn.services', [])
                                 });
                             });
                         }
+
                     }
                 }
             });
