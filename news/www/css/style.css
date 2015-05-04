@@ -11,6 +11,11 @@
     clear: both;
 }
 
+img.news-picture {
+    max-width: 100%;
+    max-height: auto;
+}
+
 .hidden {
     display: none;
 }

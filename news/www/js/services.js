@@ -58,7 +58,7 @@ angular.module('dtn.services', [])
         }
     };
 
-    var tryGetCached = function (url, ignoreAge) {
+    var tryGetCached = function (url, ignoreAge, lastError) {
         var deferred = $q.defer();
         if (angular.isDefined(localStorage)) {
             var data = localStorage.getItem(url);
@@ -69,7 +69,9 @@ angular.module('dtn.services', [])
             }
         }else if (angular.isDefined(cached[url])) {
             deferred.resolve(cached[url]);
-        }else {
+        }else if (lastError) {
+            deferred.reject(lastError);
+        } else {
             deferred.resolve(null);
         }
         return deferred.promise;
@@ -131,7 +133,7 @@ angular.module('dtn.services', [])
                 deferred.resolve(data);
             })
             .catch (function (err) {
-                tryGetCached(url)
+                tryGetCached(url, true, err)
                 .then(function (data) {
                     deferred.resolve(data);
                 }, function () {
@@ -325,8 +327,8 @@ angular.module('dtn.services', [])
                 var index = parseInt(attr.index || '0', 10);
 
                 var defaultImages = [
-                    '/img/placeholder1_exp.png',
-                    '/img/placeholder2_exp.png'
+                    'img/placeholder1_exp.png',
+                    'img/placeholder2_exp.png'
                 ];
 
                 ele.attr("src", defaultImages[index % 2]);
