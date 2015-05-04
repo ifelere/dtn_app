@@ -36,27 +36,6 @@ angular.module('dtn.services', [])
 .factory("SourceItem", function ($http, $q, dtnAnchor) {
     var cached = {};
 
-    var getCachAge = function (url) {
-        var key = "age___" + url;
-        if (angular.isDefined(localStorage)) {
-            var g = localStorage.getItem(key);
-            if (g) {
-                return parseInt(g, 10);
-            }
-        }else if (angular.isDefined(cached[key])) {
-            return cached[key];
-        }
-        return 0;
-    };
-
-    var setCacheAge = function (url, time) {
-        var key = "age___" + url;
-        if (angular.isDefined(localStorage)) {
-            localStorage.setItem(key, String(time));
-        }else{
-            cached[key] = time;
-        }
-    };
 
     var tryGetCached = function (url, ignoreAge, lastError) {
         var deferred = $q.defer();
@@ -119,7 +98,10 @@ angular.module('dtn.services', [])
 
 
     return {
-        get : function (url) {
+        get : function (url, tryCachedFirst) {
+            if (angular.isUndefined(tryCachedFirst)) {
+
+            }
             var deferred = $q.defer();
             tryGetFromHttp(url)
             .then(function (data) {
@@ -174,7 +156,7 @@ angular.module('dtn.services', [])
     };
 })
 
-.factory("FeedSource", function($q) {
+.factory("FeedSource", function($q, dtnStore) {
     var sources = [
         {
             name : "news",
@@ -246,7 +228,8 @@ angular.module('dtn.services', [])
         return val;
     };
 })
-.directive("entryImage", function ($http, $timeout, dtnStore) {
+
+.factory("entryImageProvider", function($http, dtnStore) {
     var extractors = [];
     extractors.push(function metaSource(html) {
         var metas = html.find("meta");
@@ -305,7 +288,24 @@ angular.module('dtn.services', [])
         });
 
     }
-
+    return {
+        get : function (link, callback) {
+            var key = "image_" + link;
+            var cachedUrl = dtnStore.get(key);
+            //if the enty has not been cached at all then it should be null or undefined
+            if (cachedUrl !== null && cachedUrl !== undefined) {
+                callback(cachedUrl);
+            }else {
+                findImage(link, function (src) {
+                    //store in cache so that even if an image was not found another attempt is not made to get it
+                    dtnStore.set(key, src);
+                    callback(src);
+                });
+            }
+        }
+    };
+})
+.directive("entryImage", function ($timeout, entryImageProvider) {
     return {
         restrict : 'AC',
         link : function (scope, ele, attr) {
@@ -331,29 +331,15 @@ angular.module('dtn.services', [])
                         ele.attr("src", entry.imageSource);
                     }else {
                         var link = entry.link;
-                        var key = "image_" + link;
-                        var cachedUrl = dtnStore.get(key);
-                        //if the enty has not been cached at all then it should be null or undefined
-                        if (cachedUrl !== null && cachedUrl !== undefined) {
-                            //change only if not an empty string
-                            if (cachedUrl) {
-                                ele.attr("src", cachedUrl);
-                                ele.removeClass("hidden");
-                            }
-                        }else {
-                            $timeout(function () {
-                                findImage(link, function (src) {
-                                    //store in cache so that even if an image was not found another attempt is not made to get it
-                                    dtnStore.set(key, src);
-                                    if (src) {
-                                        entry.imageSource = src;
-                                        ele.attr("src", src);
-                                        ele.removeClass("hidden");
-                                    }
-                                });
+                        $timeout(function () {
+                            entryImageProvider.get(link, function (src) {
+                                //change only if not an empty string
+                                if (src) {
+                                    ele.attr("src", src);
+                                    ele.removeClass("hidden");
+                                }
                             });
-                        }
-
+                        });
                     }
                 }
             });
