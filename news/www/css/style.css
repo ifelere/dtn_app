@@ -11,7 +11,7 @@
     clear: both;
 }
 
-img.news-picture {
+img.entry-picture {
     max-width: 100%;
     max-height: auto;
 }
@@ -33,15 +33,15 @@ img.news-picture {
     line-height: 300%;
 }
 .tags .tag {
-    background-color: #c0a0a0;
+    background-color: #e5afe5;
     -moz-border-radius: 4px;
     -webkit-border-radius: 4px;
     -o-border-radius: 4px;
     -ie-border-radius: 4px;
     border-radius: 4px;
-    padding: 8px;
+    padding: 4px;
 }
 
 .tags .tag:not(:first-child) {
-    margin-left: 10px;
+    margin-left: 8px;
 }

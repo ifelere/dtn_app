@@ -69,6 +69,13 @@ angular.module('dtn.controllers', [])
         }, 100);
     });
 
+    $scope.refresh = function () {
+        $scope.loading = true;
+        $timeout(function () {
+            loadItems($scope.source);
+        }, 100);
+    };
+
     $scope.details = function(item, index) {
         $scope.showDetails = true;
         $state.go("^." + $state.current.data.name + "-entry", {index : index});

@@ -304,20 +304,6 @@ angular.module('dtn.services', [])
             callback('');
         });
 
-
-        // $http.get(link)
-        // .success(function (html) {
-        //     html = angular.element(html);
-        //     for (var j = 0, len = extractors.length; j < len; j++) {
-        //         var c = extractors[j](html);
-        //         if (c) {
-        //             return callback(c, link);
-        //         }
-        //     }
-        //     //still 'return' with empty data
-        //     callback('', link);
-        // });
-
     }
 
     return {
