@@ -4,7 +4,7 @@
             <i class="ion-close"></i>
         </a>
         <h3 ng-bind-html="::detailItem.title"></h3>
-        <span class="date">{{::detailItem.publishedDate | toDate | date:'dd.mm.yyyy'}}</span>
+        <span class="date">{{::detailItem.publishedDate | toDate | date:'dd.MM.yyyy'}}</span>
         <span ng-if="detailItem.author" >
             <br />
             By {{::detailItem.author}}

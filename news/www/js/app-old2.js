@@ -5,11 +5,7 @@
 // the 2nd parameter is an array of 'requires'
 // 'starter.services' is found in services.js
 // 'starter.controllers' is found in controllers.js
-
-
-angular.module('dtn', ['ionic', 'ngCordova', 'dtn.database',
-    'dtn.directives',
-     'dtn.controllers', 'dtn.services'])
+angular.module('dtn', ['ionic', 'dtn.controllers', 'dtn.services'])
 
 .run(function($ionicPlatform, $rootScope) {
   $ionicPlatform.ready(function() {
@@ -56,28 +52,57 @@ angular.module('dtn', ['ionic', 'ngCordova', 'dtn.database',
   var p = $stateProvider
 
   // setup an abstract state for the tabs directive
-    .state('app', {
-        url: "/",
-        templateUrl: "templates/cards.html",
-        controller : "FeaturesCtrl"
-    })
-    .state("feed", {
-        url : "/feeds?url={sourceUrl}",
-        templateUrl : "templates/sources/index2.html",
-        controller : "SourceCtrl",
-    })
-    .state("entry", {
-        url : "/feeds/entry?url={entryUrl}&source={sourceUrl}",
-        controller : "EntryCtrl",
-        templateUrl : "templates/sources/entry.html"
+    .state('sources', {
+        url: "/sources",
+        abstract: true,
+        templateUrl: "templates/tabs.html"
     })
     .state("demo", {
         url : "/demo",
         templateUrl : "templates/demo.html"
     });
 
+
+
+    angular.forEach(['news', 'politics', 'business', 'sport', 'sports'], function (t) {
+        var views = {};
+        views[t] = {
+            templateUrl : "templates/tab-source.html",
+            controller : "SourceCtrl"
+        };
+
+
+        var key = "sources." + t, url = "/" + t;
+        p = p.state(key, {
+          url: url,
+          data : {
+              name : t
+          },
+          views: views
+      });
+      views = {};
+
+      //this state should be a sibbling
+      //make a template for displaying details
+      views[t] = {
+          templateUrl : "templates/sources/entry.html",
+          controller : "EntryCtrl"
+      };
+
+      p = p.state(key + "-entry", {
+          url : "/" + t + "/entry/{index}",
+          data : {
+              name : t
+          },
+          views : views
+      });
+
+    });
+// Each tab has its own nav history stack:
+
+
   // if none of the above states are matched, use this as the fallback
-    $urlRouterProvider.otherwise('/');
+  $urlRouterProvider.otherwise('/sources/news');
   // $urlRouterProvider.otherwise('/demo');
 
 });

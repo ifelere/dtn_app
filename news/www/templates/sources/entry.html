@@ -1,25 +1,37 @@
 <ion-view view-title="{{title || ''}}">
+    <ion-nav-buttons side="secondary">
+      <button class="button" ui-sref="app">
+        <i class="icon ion-android-home"></i>
+      </button>
+      <button class="button" ng-click="share()">
+        <i class="icon ion-android-share-alt"></i>
+      </button>
+      <button class="button" ng-click="openInBrowser(entry.link)">
+        <i class="icon ion-earth"></i>
+      </button>
+    </ion-nav-buttons>
+    <!--on-drag="disableScrolling()" on-release="tryEnableScrolling()"-->
   <ion-content class="padding">
     <div ng-if="loading" class="text-center" style="padding-top: 10%;">
         <p><ion-spinner icon="spiral"></ion-spinner></p>
     </div>
     <div ng-show="!loading">
-        <section ng-show="entry !== undefined">
+        <section ng-show="entry !== undefined" on-swipe-left="showNextArticle(1)"  on-swipe-right="showNextArticle(-1)">
             <header>
-                <a class="pull-right" ng-click="goBack()">
-                    <i class="ion-close"></i>
-                </a>
                 <h3 ng-bind-html="::entry.title"></h3>
-                <span class="date">{{::entry.publishedDate | toDate | date:'dd.mm.yyyy'}}</span>
+                <span class="date">{{::entry.publishedDate | toDate | date:'dd.MM.yyyy'}}</span>
                 <span ng-if="entry.author" >
                     <br />
                     By <u>{{::entry.author}}</u>
                 </span>
             </header>
             <div class="entry-article">
-                <p class="text-center" >
-                    <img entry-image="entry" class="entry-picture" show-placeholder="false" />
-                </p>
+                <div class="text-center entry-image-wrapper" entry-image-listener>
+                    <img entry-image="entry" class="entry-picture" placeholder="img/dtn-tw-128.png" />
+                    <div class="spinner loader">
+                        <ion-spinner class="spiral hidden"></ion-spinner>
+                    </div>
+                </div>
                 <div ng-bind-html="::entry.content">
 
                 </div>
