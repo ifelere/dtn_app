@@ -15,21 +15,21 @@
     <div ng-if="loading" class="text-center" style="padding-top: 10%;">
         <p><ion-spinner icon="spiral"></ion-spinner></p>
     </div>
-    <div ng-show="!loading">
-        <section ng-show="entry !== undefined" on-swipe-left="showNextArticle(1)"  on-swipe-right="showNextArticle(-1)">
+    <div ng-show="!loading" hover-tracker="dark">
+        <section class="entry-article" ng-show="entry !== undefined" on-swipe-left="showNextArticle(1)"  on-swipe-right="showNextArticle(-1)">
             <header>
+                <div class="text-center entry-image-wrapper">
+                    <img entry-image="entry" class="entry-picture" placeholder="img/dtn-tw-128.png" on-error-src="img/dtn-tw-128.png" />
+                </div>
                 <h3 ng-bind-html="::entry.title"></h3>
-                <span class="date">{{::entry.publishedDate | toDate | date:'dd.MM.yyyy'}}</span>
+                <!-- <span class="date">{{::entry.publishedDate | toDate | date:'dd.MM.yyyy'}}</span>
                 <span ng-if="entry.author" >
                     <br />
                     By <u>{{::entry.author}}</u>
-                </span>
+                </span> -->
             </header>
-            <div class="entry-article">
-                <div class="text-center entry-image-wrapper">
-                    <img entry-image="entry" class="entry-picture" placeholder="img/dtn-tw-128.png" />
-                </div>
-                <div ng-bind-html="::entry.content">
+            <div class="article-content">
+                <div bind-html-remove-og-img="::entry.content">
 
                 </div>
                 <p>&nbsp;</p>

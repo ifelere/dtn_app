@@ -1,58 +1,50 @@
-<ion-view view-title="Daily Times Nigeria">
+<ion-view view-title="The Kuramo Report">
   <ion-content>
     <div ng-if="loading" style="padding-top: 10%;">
         <p class="text-center">
             <ion-spinner class="android featured-spinner"></ion-spinner>
         </p>
     </div>
-    <div ng-show="!loading" class="padding">
-        <ion-slide-box   ng-style="{'width' : deviceWidth + 'px', 'height' : deviceHeight + 'px'}"  magazine-cover-book>
-          <ion-slide ng-repeat="item in items">
-            <div class="box featured-card" magazine-cover="item.featured.primary" ng-click="open(item)">
-                <div class="featured-card-content">
-                    <div class="featured-card-banner row">
-                        <div class="col col-25">
-                            <img class="logo" src="img/dtn-tw-128.png" alt="Daily Times Nigeria" />
-                        </div>
-                        <div class="col col-75">
-                            <p class="text-right">
-                                <b>{{::item.title}}</b><br />
-                                {{::item.featured.primary.publishedDate | toDate | date:'dd.MM.yyyy'}}
-                            </p>
-                            <h2 class="title">
-                                <a href="#" ng-click="openEntry(item.featured.primary, item, $event)"  ng-bind-html="::item.featured.primary.title">
+    <div class="featured-card" ng-show="!loading" hover-tracker>
+        <div ng-click="open(item)">
+            <div class="featured-card-banner">
+                <a href="#" slides-control="previous" handle="featured-slides" class="slider-controls slide-left">
+                    <i class="icon ion-chevron-left"></i>
+                </a>
+                <a href="#"  slides-control="next" handle="featured-slides" class="slider-controls slide-right">
+                    <i class="icon ion-chevron-right"></i>
+                </a>
+                <ion-slide-box  magazine-cover-book does-continue="'true'" auto-play="'true'" show-pager="false" delegate-handle="featured-slides">
+                    <ion-slide ng-repeat="entry in item.entries | limitTo:4"  class="entry-slide" magazine-cover="entry" on-error-background="img/dtn-tw-128.png">
+                        <div class="film-layer padding">
+                            <h1>
+                                <a href="#" class="text-center" ng-click="openEntry(entry, item, $event)"  ng-bind-html="::entry.title">
 
                                 </a>
-                            </h2>
+                            </h1>
+                            <p ng-bind-html="::(entry.contentSnippet | cleanContent)"></p>
                         </div>
-                    </div>
-                    <div class="row row-center row-bottom">
-                        <div class="col col-50 padding">
-                            <ul class="others">
-                                <li ng-repeat="otherFeature in item.featured.others | limitTo:featuredSectionLength">
-                                    <a href="#" ng-click="openEntry(otherFeature, item, $event)" >{{::otherFeature.title}}</a>
-                                </li>
-                            </ul>
-                        </div>
-                        <div class="col col-50 text-right padding">
-                            <ul class="others">
-                                <li ng-click="openEntry(otherFeature, item, $event)" ng-repeat="otherFeature in item.featured.others | limitTo:remainingFeaturedSectionLength">
-                                    <a href="#" ng-click="openEntry(otherFeature, item, $event)" >{{::otherFeature.title}}</a>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
+                    </ion-slide>
+                </ion-slide-box>
+            </div>
+
+            <div class="row responsive-sm row-bottom">
+                <div class="col col-50">
+                    <ul class="others">
+                        <li ng-repeat="otherFeature in item.featured.others | limitTo:featuredSectionLength">
+                            <a href="#" ng-click="openEntry(otherFeature, item, $event)" >{{::otherFeature.title}}</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="col col-50 text-right">
+                    <ul class="others">
+                        <li ng-click="openEntry(otherFeature, item, $event)" ng-repeat="otherFeature in item.featured.others | limitTo:remainingFeaturedSectionLength">
+                            <a href="#" ng-click="openEntry(otherFeature, item, $event)" >{{::otherFeature.title}}</a>
+                        </li>
+                    </ul>
                 </div>
             </div>
-          </ion-slide>
-      </ion-slide-box>
-      <toast-message duration="13500">
-          <i class="icon ion-chevron-left"></i>
-            Swipe left/right for more sources
-          <i class="icon ion-chevron-right"></i>
-          <br />
-          Click on an empty area for more items
-      </toast-message>
+        </div>
     </div>
   </ion-content>
 </ion-view>

@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<widget id="com.ionicframework.news268838" version="0.2.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
-  <name>DTN</name>
-  <description>
-        Serve news from Daily Times of Nigeria
+<widget id="com.ionicframework.news268838" version="0.3.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+  <name>TKR</name>
+  <description>&#xD;
+        Serve news from The Kuramo Report&#xD;
     </description>
-  <author email="ifelere@gmail.com" href="https://ng.linkedin.com/pub/ifelere-oyetola/27/977/92a">
-      Ifelere Oyetola
+  <author email="ifelere@gmail.com" href="https://ng.linkedin.com/pub/ifelere-oyetola/27/977/92a">&#xD;
+      Ifelere Oyetola&#xD;
     </author>
   <content src="index.html"/>
   <access origin="*"/>

@@ -12,22 +12,21 @@
     </div>
 
     <div ng-show="!loading && items.length>0">
-        <div class="top-entry" ng-click="details(items[0])" entry-background="items[0]" show-placeholder="false">
-            <div class="top-entry-content row">
-                <div class="col col-10">
-                    <img class="logo" src="img/dtn-tw-128.png" alt="Daily Times Nigeria" />
-                </div>
-                <div class="col col-90 padding">
-                    <h1 class="title" ng-bind-html="::items[0].title"></h1>
-                    <p ng-bind-html="::items[0].contentSnippet"></p>
-                </div>
+
+        <div class="top-entry card list" ng-click="details(items[0])">
+            <div class="item item-image">
+                <img entry-image="items[0]" on-error-src="img/dtn-tw-128.png" placeholder="img/dtn-tw-128.png" />
+            </div>
+            <div class="item item-text-wrap item-wrap-text">
+                <h1 class="title" ng-bind-html="::items[0].title"></h1>
+                <p ng-bind-html="::(items[0].contentSnippet | cleanContent)"></p>
             </div>
         </div>
         <div ng-show="items.length>1" class="list">
             <a href="#" ng-click="details(item)" class="item item-text-wrap item-thumbnail-left" ng-repeat="item in getItems(1)">
-                <img entry-image="item" />
+                <img entry-image="item"  on-error-src="img/dtn-tw-128.png" />
                 <b>{{::item.title}}</b>
-                <p ng-bind-html="::item.contentSnippet">
+                <p ng-bind-html="::(item.contentSnippet | cleanContent)">
                 </p>
             </a>
         </div>
