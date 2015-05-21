@@ -16,6 +16,7 @@ angular.module('dtn.controllers', [])
 				if (feed.feed) {
 					feed = feed.feed;
 				}
+<<<<<<< HEAD
 				angular.extend($scope.items[index], {
 					featured : {
 						primary : feed.entries[0],
@@ -23,6 +24,12 @@ angular.module('dtn.controllers', [])
 					},
 					entries : feed.entries
 				});
+=======
+				$scope.items[index].featured = {
+					primary : feed.entries[0],
+					others : feed.entries.slice(1, remainingFeaturedLength)
+				};
+>>>>>>> develop
 				loadEntries(index + 1);
 			});
 		} else {
@@ -46,6 +53,7 @@ angular.module('dtn.controllers', [])
 				loadEntries(0);
 			});
 		});
+<<<<<<< HEAD
 	};
 
 
@@ -64,6 +72,8 @@ angular.module('dtn.controllers', [])
 			return others[key];
 		}
 		return [];
+=======
+>>>>>>> develop
 	};
 
 

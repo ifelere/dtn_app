@@ -315,7 +315,11 @@ angular.module('dtn.services', [])
 	};
 })
 
+<<<<<<< HEAD
 .constant("defaultTitle", "The Kuramo Report")
+=======
+.constant("defaultTitle", "News Reader")
+>>>>>>> develop
 
 .service("dtnAnchor", function () {
 	//ensure that all anchors target '_blank'
@@ -368,6 +372,8 @@ angular.module('dtn.services', [])
 		}
 	];
 
+<<<<<<< HEAD
+=======
 	// var sources = [
 	// 	{
 	// 		name : "trk",
@@ -377,6 +383,7 @@ angular.module('dtn.services', [])
 	// 	}
 	// ];
 
+>>>>>>> develop
 	var id = 0;
 
 	angular.forEach(sources, function (s) {
