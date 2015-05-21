@@ -473,7 +473,7 @@ angular.module("dtn.directives", [])
 })
 .directive("hoverTracker", function () {
 	return function (scope, element, attr) {
-		element.append(angular.element("<div class='pegged pegged-" + (attr.hoverTracker || 'light') + "'>(--version)</div>"));
+		// element.append(angular.element("<div class='pegged pegged-" + (attr.hoverTracker || 'light') + "'>(--version)</div>"));
 	};
 })
 .directive("entryImage", function ($timeout, entryImageExtractor, entryImageProvider) {

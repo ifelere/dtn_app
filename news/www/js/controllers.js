@@ -32,7 +32,10 @@ angular.module('dtn.controllers', [])
 		}
 	};
 
+	var others = {};
+
 	var refresh = function () {
+		others = {};
 		$scope.loading = false;
 		FeedSource.all()
 		.then(function (list) {
@@ -43,6 +46,24 @@ angular.module('dtn.controllers', [])
 				loadEntries(0);
 			});
 		});
+	};
+
+
+
+	$scope.getOtherFeatured = function (src, offset, length) {
+		if (src) {
+			var key = (src.feedUrl || src.link || src.url) + "_" + offset;
+			if (angular.isUndefined(others[key])) {
+				var data = src.featured.others || [];
+				if (length) {
+					others[key] = data.slice(offset, length);
+				}else {
+					others[key] = data.slice(offset);
+				}
+			}
+			return others[key];
+		}
+		return [];
 	};
 
 

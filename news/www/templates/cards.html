@@ -1,4 +1,4 @@
-<ion-view view-title="The Kuramo Report">
+<ion-view>
   <ion-content>
     <div ng-if="loading" style="padding-top: 10%;">
         <p class="text-center">
@@ -15,7 +15,7 @@
                     <i class="icon ion-chevron-right"></i>
                 </a>
                 <ion-slide-box  magazine-cover-book does-continue="'true'" auto-play="'true'" show-pager="false" delegate-handle="featured-slides">
-                    <ion-slide ng-repeat="entry in item.entries | limitTo:4"  class="entry-slide" magazine-cover="entry" on-error-background="img/dtn-tw-128.png">
+                    <ion-slide ng-repeat="entry in item.entries | limitTo:5"  class="entry-slide" magazine-cover="entry" on-error-background="img/dtn-tw-128.png">
                         <div class="film-layer padding">
                             <h1>
                                 <a href="#" class="text-center" ng-click="openEntry(entry, item, $event)"  ng-bind-html="::entry.title">
@@ -28,17 +28,17 @@
                 </ion-slide-box>
             </div>
 
-            <div class="row responsive-sm row-bottom">
+            <div class="row row-bottom">
                 <div class="col col-50">
                     <ul class="others">
-                        <li ng-repeat="otherFeature in item.featured.others | limitTo:featuredSectionLength">
+                        <li ng-repeat="otherFeature in getOtherFeatured(item, 0, 3)">
                             <a href="#" ng-click="openEntry(otherFeature, item, $event)" >{{::otherFeature.title}}</a>
                         </li>
                     </ul>
                 </div>
                 <div class="col col-50 text-right">
                     <ul class="others">
-                        <li ng-click="openEntry(otherFeature, item, $event)" ng-repeat="otherFeature in item.featured.others | limitTo:remainingFeaturedSectionLength">
+                        <li ng-repeat="otherFeature in getOtherFeatured(item, 3)">
                             <a href="#" ng-click="openEntry(otherFeature, item, $event)" >{{::otherFeature.title}}</a>
                         </li>
                     </ul>

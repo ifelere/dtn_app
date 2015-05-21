@@ -12,6 +12,22 @@
     height: 64px;
 }
 
+.bar-header {
+    background-repeat: no-repeat !important;
+    background-position: 30px 0 !important;
+    background-image: url('../img/logo_cropped.png') !important;
+    background-size: contain !important;
+}
+
+.bar-header .title {
+    visibility: hidden;
+}
+
+.bar-header button.back-button .back-text {
+    display: none;
+}
+
+
 .featured-card {
     font-size: 120%;
     background-color: #e0e0e0;
@@ -73,12 +89,12 @@
 }
 
 .featured-card .banner-row a {
-    color: black !important;
+    color: #222222 !important;
 }
 
 
 .featured-card  a {
-    color: black !important;
+    color: #222222 !important;
     text-decoration: none;
 }
 
@@ -187,15 +203,15 @@ img.entry-picture {
 }
 
 .entry-article {
-    margin-top: 20px;
+    margin-top: 5px;
     margin-bottom: 20px;
 }
-.entry-article .article-content a {
-    color: #222222 !important;
+.entry-article .article-content a, .entry-article  .article-content a:visited {
+    color: #a08060 !important;
     text-decoration: none;
 }
 
-.entry-article  .article-content a:hover, .entry-article  .article-content a:visited {
+.entry-article  .article-content a:hover {
     color: #a0a080 !important;
 }
 
