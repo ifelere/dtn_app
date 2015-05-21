@@ -33,157 +33,187 @@ angular.module('dtn.services', [])
 
 })
 
-.factory("SourceItem", function ($http, $q, dtnAnchor, dtnStore, Database) {
+.provider("RssParser", function () {
+	var pref = "GoogleFeedApi"; // "GoogleFeedApi"; //RssXmlParser
+	this.$get = [pref/*, "GoogleFeedApi"*/, function (P) {
+		return P;
+	}];
+})
+
+.factory("RssXmlParser", function ($http, $q, dtnAnchor) {
+	return {
+		get : function (url) {
+			var deferred = $q.defer();
+			$http.get(url)
+			.success(function (xml) {
+				var x2js = new X2JS();
+		    	var xmlDoc = x2js.parseXmlString(xml);
+				deferred.resolve(null);
+			}).error(function (err) {
+				deferred.reject(err);
+			});
+			return deferred.promise;
+		}
+	};
+})
+
+.factory("CatchedFeeds", function (Database, $q) {
+	return {
+		get : function (url) {
+			var deferred = $q.defer();
+			Database.entity("feed")
+			.first({
+				link : url
+			}).then(function (feed) {
+				if (feed) {
+					Database.entity("entry")
+					.find({
+						$filter : {
+							sourceId : feed.id
+						},
+						$order : {
+							cIndex : 1
+						}
+					}).then(function (entries) {
+						feed.entries = entries;
+						deferred.resolve({
+							feed : feed
+						});
+					}, function (err) {
+						deferred.reject(err);
+					});
+				} else {
+					deferred.resolve(null);
+				}
+			}, function (err) {
+				deferred.reject(err);
+			});
+
+			return deferred.promise;
+		},
+
+		store : function (url, data) {
+			var deferred = $q.defer();
+
+			var entry = Database.entity("entry"),
+				feedEntity = Database.entity("feed");
+
+			var cacheImpl = function (sourceId) {
+				var doSave = function (sid, index, successCount) {
+					if (index === undefined) {
+						index = 0;
+					}
+					if (successCount == undefined) {
+						successCount = 0;
+					}
+					if (index < data.entries.length) {
+						var et = data.entries[index];
+						entry.insert({
+							sourceId : sid,
+							link : et.link || et.url,
+							jsonData : angular.toJson(et),
+							cIndex : index
+						}).then(function () {
+							doSave(sid, index + 1, successCount + 1);
+						}, function (err) {
+							deferred.reject(err);
+						});
+					}else {
+						deferred.resolve(successCount);
+					}
+				};
+
+				if (sourceId) {
+					feedEntity.update(
+					sourceId,
+					{
+						lastFetched : String(new Date())
+					})
+					.then(function (feed) {
+						doSave(sourceId, 0, 1);
+					});
+				}else {
+					feedEntity.insert({
+						link : url,
+						jsonData : angular.toJson(_.omit(data, "entries")),
+						lastFetched : String(new Date())
+					})
+					.then(function (feed) {
+						doSave(feed._id, 0, 1);
+					});
+				}
+
+			};
+
+			feedEntity.first(
+				['_id'], {
+				link : url
+			}).then(function (feed) {
+				if (feed) {
+					//first remove previous entries
+					entry.remove({
+						sourceId : feed._id
+					}).then(function () {
+						cacheImpl(feed._id);
+					});
+				}else {
+					cacheImpl(null);
+				}
+			});
+
+			return deferred.promise;
+		}
+	};
+})
+
+.factory("GoogleFeedApi", function ($http, $q, dtnAnchor) {
+	return {
+		get : function (url) {
+			var deferred = $q.defer();
+
+			var options = {};
+
+			options.params = {
+				q : url,
+				v : "1.0",
+				callback : "JSON_CALLBACK",
+				num : 30
+			};
+
+			$http.jsonp("http://ajax.googleapis.com/ajax/services/feed/load", options).
+			success(function (data, status) {
+				data = data.responseData || data;
+				angular.forEach(data.feed.entries, function (e) {
+					var c = dtnAnchor.targetBlank(e.content);
+					if (c) {
+						e.content = c;
+					}
+				});
+				deferred.resolve(data);
+			}).error(function (err) {
+				deferred.reject(err);
+			});
+			return deferred.promise;
+		}
+	};
+})
+
+.factory("SourceItem", function ($http, $q, dtnAnchor, dtnStore, Database, CatchedFeeds, RssParser) {
 	var cached = {};
 	var KEY_LAST_CACHE = "last.cache";
 
-	var tryGetCached = function (url) {
-		var deferred = $q.defer();
-		Database.entity("feed")
-		.first({
-			link : url
-		}).then(function (feed) {
-			if (feed) {
-				Database.entity("entry")
-				.find({
-					$filter : {
-						sourceId : feed.id
-					},
-					$order : {
-						cIndex : 1
-					}
-				}).then(function (entries) {
-					feed.entries = entries;
-					deferred.resolve({
-						feed : feed
-					});
-				}, function (err) {
-					deferred.reject(err);
-				});
-			} else {
-				deferred.resolve(null);
-			}
-		}, function (err) {
-			deferred.reject(err);
-		});
-
-		return deferred.promise;
-	};
-
-	var tryGetCachedOld = function (url) {
-		var deferred = $q.defer();
-		if (angular.isDefined(localStorage)) {
-			var data = localStorage.getItem(url);
-			if (data) {
-				deferred.resolve(angular.fromJson(data));
-			} else {
-				deferred.resolve(null);
-			}
-		} else if (angular.isDefined(cached[url])) {
-			deferred.resolve(cached[url]);
-		} else if (lastError) {
-			deferred.reject(lastError);
-		} else {
-			deferred.resolve(null);
-		}
-		return deferred.promise;
-	};
-
-	var cacheImpl = function (data, url,  sourceId) {
-
-
-		var doSave = function (sid) {
-			var entry = Database.entity("entry");
-			angular.forEach(data.entries, function (et, index) {
-				entry.insert({
-					sourceId : sid,
-					link : et.link || et.url,
-					jsonData : angular.toJson(et),
-					cIndex : index
-				});
-			});
-		};
-
-		if (sourceId) {
-			doSave(sourceId);
-		}else {
-			Database.entity("feed").insert({
-				link : url,
-				jsonData : angular.toJson(_.omit(data, "entries")),
-				lastFetched : String(new Date())
-			})
-			.then(function (feed) {
-				doSave(feed._id);
-			});
-		}
-
-	};
-
-	var cacheResult = function (data, url) {
-		var entry = Database.entity("entry");
-		var e = Database.entity("feed");
-		e.first(
-			['_id'], {
-			link : url
-		}).then(function (feed) {
-			if (feed) {
-				//first remove previous entries
-				entry.remove({
-					sourceId : feed._id
-				}).then(function () {
-					cacheImpl(data, url, feed._id);
-				});
-			}else {
-				cacheImpl(data, url, null);
-			}
-		});
-
-	};
-
-	var cacheResultOld = function (data, url) {
-		dtnStore.set(url, data);
-		// if (angular.isDefined(localStorage)) {
-		// localStorage.setItem(url, angular.toJson(data));
-		// }else {
-		// cached[url] = data;
-		// }
-	};
-
-	var useGoogleApi = function (url, deferred) {
-		var options = {};
-		options.params = {
-			q : url,
-			v : "1.0",
-			callback : "JSON_CALLBACK",
-			num : 25
-		};
-
-		$http.jsonp("http://ajax.googleapis.com/ajax/services/feed/load", options).
-		success(function (data, status) {
-			data = data.responseData || data;
-			angular.forEach(data.feed.entries, function (e) {
-				var c = dtnAnchor.targetBlank(e.content);
-				if (c) {
-					e.content = c;
-				}
-			});
-			deferred.resolve(data);
-			cacheResult(data.feed, url);
-		}).error(function (err) {
-			deferred.reject(err);
-		});
-
-	};
-
 	var tryGetFromHttp = function (url) {
-		var deferred = $q.defer();
-		useGoogleApi(url, deferred);
-		return deferred.promise;
+		return RssParser.get(url);
+	};
+
+	var tryGetCached = function (url) {
+		return CatchedFeeds.get(url);
 	};
 
 	return {
 		get : function (url, tryCachedFirst) {
 			var cachKey = KEY_LAST_CACHE + "_" + url;
+
 			if (angular.isUndefined(tryCachedFirst)) {
 				var lastCache = dtnStore.get(cachKey);
 				if (lastCache) {
@@ -213,11 +243,12 @@ angular.module('dtn.services', [])
 					fn(url)
 					.then(function (d) {
 						if (d) {
+							deferred.resolve(d);
 							//if it is http then store the last time fetched
 							if (fn === tryGetFromHttp) {
 								dtnStore.set(cachKey, Date.now());
+								CatchedFeeds.store(d, url);
 							}
-							deferred.resolve(d);
 						} else {
 							tryGet(index + 1, d, error);
 						}
@@ -234,26 +265,6 @@ angular.module('dtn.services', [])
 			};
 
 			tryGet(0, null);
-
-			// tryGetFromHttp(url)
-			// .then(function (data) {
-			// if (data) {
-			// deferred.resolve(data);
-			// }else {
-			// return tryGetCached(url);
-			// }
-			// })
-			// .then(function (data) {
-			// deferred.resolve(data);
-			// })
-			// .catch (function (err) {
-			// tryGetCached(url, true, err)
-			// .then(function (data) {
-			// deferred.resolve(data);
-			// }, function () {
-			// deferred.reject(err);
-			// });
-			// });
 			return deferred.promise;
 		},
 		getNextEntryLink : function (sourceId, offset) {
@@ -300,27 +311,11 @@ angular.module('dtn.services', [])
 				}
 				return null;
 			});
-			// var deferred = $q.defer();
-			// tryGetCached(url)
-			// .then(function (data) {
-				// if (data && data.feed) {
-					// if (angular.isString(index)) {
-						// deferred.resolve(_.find(data.feed.entries, function (e) {
-								// return (e.link === index || e.url === index);
-							// }));
-					// } else {
-						// deferred.resolve(data.feed.entries[index]);
-					// }
-				// } else {
-					// deferred.resolve(null);
-				// }
-			// });
-			// return deferred.promise;
 		}
 	};
 })
 
-.constant("defaultTitle", "The Kuramo Report")
+.constant("defaultTitle", "News Reader")
 
 .service("dtnAnchor", function () {
 	//ensure that all anchors target '_blank'
@@ -340,38 +335,38 @@ angular.module('dtn.services', [])
 })
 
 .factory("FeedSource", function ($q, dtnStore, Database) {
-	// var sources = [{
-	// 		name : "news",
-	// 		title : "News",
-	// 		url : "http://dailytimes.com.ng/category/news/feed/"
-	// 	}, {
-	// 		name : "politics",
-	// 		title : "Politics",
-	// 		url : "http://dailytimes.com.ng/category/politics/feed/"
-	// 	}, {
-	// 		url : "http://dailytimes.com.ng/category/business/feed/",
-	// 		name : "business",
-	// 		title : "Business"
-	// 	}, {
-	// 		name : "sport",
-	// 		url : "http://dailytimes.com.ng/category/sport/feed/",
-	// 		title : "Sport",
-	// 		display : false
-	// 	}, {
-	// 		name : "sports",
-	// 		url : "http://dailytimes.com.ng/category/sport/feed/",
-	// 		title : "Sports"
-	// 	}
-	// ];
-
-	var sources = [
-		{
-			name : "trk",
-			title : "The Kuramo Report",
-			url : "http://tkr.com.ng/rss.xml",
-			display : true
+	var sources = [{
+			name : "news",
+			title : "News",
+			url : "http://dailytimes.com.ng/category/news/feed/"
+		}, {
+			name : "politics",
+			title : "Politics",
+			url : "http://dailytimes.com.ng/category/politics/feed/"
+		}, {
+			url : "http://dailytimes.com.ng/category/business/feed/",
+			name : "business",
+			title : "Business"
+		}, {
+			name : "sport",
+			url : "http://dailytimes.com.ng/category/sport/feed/",
+			title : "Sport",
+			display : false
+		}, {
+			name : "sports",
+			url : "http://dailytimes.com.ng/category/sport/feed/",
+			title : "Sports"
 		}
 	];
+
+	// var sources = [
+	// 	{
+	// 		name : "trk",
+	// 		title : "The Kuramo Report",
+	// 		url : "http://tkr.com.ng/rss.xml",
+	// 		display : true
+	// 	}
+	// ];
 
 	var id = 0;
 

@@ -4,7 +4,7 @@ angular.module('dtn.controllers', [])
 	$scope.loading = true;
 
 	var remainingFeaturedLength = 6;
-	
+
 	$scope.featuredSectionLength = remainingFeaturedLength / 2;
 
 	$scope.remainingFeaturedSectionLength = -(remainingFeaturedLength - $scope.featuredSectionLength - 1);
@@ -15,7 +15,7 @@ angular.module('dtn.controllers', [])
 			.then(function (feed) {
 				if (feed.feed) {
 					feed = feed.feed;
-				} 
+				}
 				$scope.items[index].featured = {
 					primary : feed.entries[0],
 					others : feed.entries.slice(1, remainingFeaturedLength)
@@ -37,16 +37,16 @@ angular.module('dtn.controllers', [])
 			_.defer(function () {
 				loadEntries(0);
 			});
-		});	
+		});
 	};
-	
+
 
 	$scope.open = function (source) {
 		$state.go("feed", {
 			sourceUrl : source.url || source.link
 		});
 	};
-	
+
 	$scope.openEntry = function(item, source, event) {
 		if (event) {
 			event.stopPropagation();
@@ -56,7 +56,7 @@ angular.module('dtn.controllers', [])
 			entryUrl: item.link || item.url
 		});
 	};
-	
+
 	$scope.$on("$ionicView.enter", function () {
 		refresh();
 	});
@@ -74,7 +74,7 @@ angular.module('dtn.controllers', [])
 		var v = $ionicScrollDelegate.getScrollView();
 		v.__enableScrollY = false;
 	};
-	
+
 	$scope.tryEnableScrolling = function () {
 		if (__scrollingKilled) {
 			var v = $ionicScrollDelegate.getScrollView();
@@ -97,7 +97,7 @@ angular.module('dtn.controllers', [])
 			$scope.loading = false;
 		});
 	}
-	
+
 	$scope.showNextArticle = function (offset) {
 		offset = $scope.entry.cIndex + offset;
 		SourceItem.getNextEntryLink($scope.source._id, offset)
@@ -115,7 +115,7 @@ angular.module('dtn.controllers', [])
 		$scope.source = src;
 		loadEntry(src);
 	});
-	
+
 	// FeedSource.find({
 		// url : $stateParams.sourceUrl
 	// })
@@ -157,14 +157,14 @@ angular.module('dtn.controllers', [])
 		$scope.source = src;
 		$scope.title = src.title;
 		$timeout(function () {
-			loadItems(src);
+			loadItems(src, true);
 		});
 	});
 
 	$scope.refresh = function () {
 		$scope.loading = true;
 		$timeout(function () {
-			loadItems($scope.source, true);
+			loadItems($scope.source, false);
 		});
 	};
 
@@ -174,15 +174,15 @@ angular.module('dtn.controllers', [])
 			entryUrl: item.link || item.url
 		});
 	};
-	
+
 	var __subSet = [];
-	
+
 	$scope.getItems = function (offset) {
 		if ($scope.items) {
 			if (__subSet.length < $scope.items.length - offset) {
 				__subSet.length = 0;
 				Array.prototype.push.apply(__subSet, $scope.items.slice(offset));
-			}	
+			}
 		}
 		return __subSet;
 	};
