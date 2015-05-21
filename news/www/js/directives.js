@@ -1,5 +1,123 @@
 angular.module("dtn.directives", [])
-.directive("magazineCoverBook", function ($timeout, entryImageProvider) {
+
+.directive("slidesControl", function ($ionicSlideBoxDelegate) {
+	var slideBy = function (offset, handle, wrap) {
+		var h = $ionicSlideBoxDelegate.$getByHandle(handle);
+		var idx = h.currentIndex() + offset,
+			count = h.slidesCount();
+		if (idx < 0) {
+			if (!wrap) {
+				return;
+			}
+			idx = count + idx;
+		}else if (idx > count) {
+			if (!wrap) {
+				return;
+			}
+			idx = idx - count;
+		}
+		h.slide(idx);
+	};
+
+	var callers = {
+		next : function (handle, wrap) {
+			slideBy(1, handle, wrap);
+		},
+		previous : function (handle, wrap) {
+			slideBy(-1, handle, wrap);
+		},
+		prev : function (handle, wrap) {
+			slideBy(-1, handle, wrap);
+		}
+	};
+
+	return {
+		restrict : "AC",
+		link : function (scope, elemt, att) {
+			elemt.bind("click", function (e) {
+				e.stopPropagation();
+				scope.$apply(function () {
+					var key = att.slidesControl;
+					(callers[key] || angular.noop)(att.handle, att.wrap === 'true');
+				});
+			});
+		}
+	};
+})
+
+.directive("onErrorSrc", function () {
+	return function (scope, element, attr) {
+		var errorOccured = false;
+		var event = "error";
+		element.bind(event, function () {
+			element.unbind(event);
+			if (!errorOccured) {
+				errorOccured = true;
+				var src = element.attr("src");
+				if (src != attr.onErrorSrc) {
+					scope.$apply(function () {
+						element.attr("src", attr.onErrorSrc);
+					});
+				}
+			}
+		});
+	};
+})
+
+.directive("onErrorBackground", function () {
+	return function (scope, element, attr) {
+		var errorOccured = false;
+		var event = "error";
+		element.bind(event, function () {
+			element.unbind(event);
+			if (!errorOccured) {
+				errorOccured = true;
+				var src = element.css("background-image");
+				var replaceWith = "url(\"" + attr.onErrorBackground + "\")"
+				if (src != replaceWith) {
+					scope.$apply(function () {
+						element.css("background-image", replaceWith);
+					});
+				}
+			}
+		});
+	};
+
+
+})
+
+.directive("bindHtmlRemoveOgImg", function ($sce) {
+	return function (scope, element, attr) {
+		var onceBindExpression = /^\:\:/;
+		var bindOnce = onceBindExpression.test(attr.bindHtmlRemoveOgImg), expression;
+		if (bindOnce) {
+			expression = attr.bindHtmlRemoveOgImg.replace(onceBindExpression, '');
+		}else {
+			expression = attr.bindHtmlRemoveOgImg;
+		}
+		var ogExp = /og\:image/;
+		var kill = scope.$watch($sce.parseAsHtml(expression), function(value) {
+
+			if (value) {
+				element.empty();
+				if (bindOnce) {
+					kill();
+				}
+				var wrapper = angular.element("<div>" + value + "</div>");
+				_.some(wrapper.find("div"), function (div) {
+					div = angular.element(div);
+					if (ogExp.test(div.attr("rel"))) {
+						div.remove();
+						return true;
+					}
+					return false;
+				});
+				element.append(wrapper.children());
+			}
+	    });
+	};
+})
+.directive("magazineCoverBook", function ($timeout, entryImageExtractor, entryImageProvider) {
 	var width = 400,
 	height = 600;
 	var getCanvas = function () {
@@ -42,9 +160,9 @@ angular.module("dtn.directives", [])
 		// height = canvas.height = imgEl.naturalHeight || imgEl.offsetHeight || imgEl.height;
 		// width = canvas.width = imgEl.naturalWidth || imgEl.offsetWidth || imgEl.width;
 		canvas.width = width;
-		
+
 		canvas.height = height;
-		
+
 		context.drawImage(imgEl, 0, 0, width, height);
 
 		try {
@@ -74,7 +192,7 @@ angular.module("dtn.directives", [])
 
 	}
 
-	
+
 	function getAverageImageRGB(path, callback) {
 		var img = new Image();
 		img.onload = function () {
@@ -83,7 +201,7 @@ angular.module("dtn.directives", [])
 		};
 		img.src = path;
 	}
-	
+
 	var drawImage = function (context, src, options, next) {
 		var img = new Image();
 		if (options.crossOrigin) {
@@ -188,19 +306,33 @@ angular.module("dtn.directives", [])
 	return {
 		restrict : "A",
 		controller : function () {
-			this.style = function (link, destinationElement, options) {
-				entryImageProvider.get(link, function (src) {
+			var lookupAndCache = function (entry, destinationElement, options) {
+				entryImageProvider.get(entry.link, function (src) {
 					if (src) {
 						destinationElement.css("background-image",
 							"url('" + src + "')");
-							
+
 						// getAverageImageRGB(src, function (rgb) {
 							// if (console) {
 								// console.log(rgb);
 							// }
-						// });	
+						// });
 					}
 				});
+			};
+			this.style = function (entry, destinationElement, options) {
+				entryImageExtractor.get(entry)
+				.then(function (src) {
+					if (src) {
+						destinationElement.css("background-image",
+							"url('" + src + "')");
+					}else {
+						lookupAndCache(entry, destinationElement, options);
+					}
+				}, function () {
+					lookupAndCache(entry, destinationElement, options);
+				});
+
 			};
 		}
 	};
@@ -215,7 +347,7 @@ angular.module("dtn.directives", [])
 			}, function (o) {
 				if (o) {
 					k();
-					book.style(o.link, element, attr);
+					book.style(o, element, attr);
 				}
 			});
 	};
@@ -247,7 +379,7 @@ angular.module("dtn.directives", [])
 		}
 	};
 })
-.directive("entryBackground", function ($timeout, entryImageProvider) {
+.directive("entryBackground", function ($timeout, entryImageExtractor, entryImageProvider) {
 	return {
 		restrict : 'AC',
 		link : function (scope, ele, attr) {
@@ -256,7 +388,7 @@ angular.module("dtn.directives", [])
 					ele.css("background-image", "url('" + src + "')");
 				}
 			};
-			
+
 			if (attr.placeholder) {
 				setBackground(attr.placeholder);
 			}
@@ -267,25 +399,46 @@ angular.module("dtn.directives", [])
 					'img/placeholder2_exp.png'
 				];
 				setBackground(defaultImages[index % defaultImages.length]);
-			} 
+			}
+
+			var lookupAndCache = function (entry){
+				entryImageProvider.get(entry.link, function (src) {
+					if (src) {
+						ele.removeClass("loading")
+							.addClass("loaded");
+					}
+					setBackground(src);
+				});
+			};
 			var kill = scope.$watch(function () {
 					return scope.$eval(attr.entryBackground);
 				}, function (entry) {
 					if (entry) {
-						kill();
-						var link = entry.link;
+						if (attr.changeAlways !== 'true') {
+							kill();
+							kill = null;
+
+						}
 						$timeout(function () {
-							entryImageProvider.get(link, function (src) {
+							entryImageExtractor.get(entry)
+							.then(function (src) {
 								if (src) {
-									ele.removeClass("loading")
-										.addClass("loaded");
+									setBackground(src);
+								}else {
+									lookupAndCache(entry);
 								}
-								setBackground(src);
-								
-							});	
+							}, function () {
+								lookupAndCache(entry);
+							});
 						});
 					}
 				});
+
+			scope.$on("$destroy", function () {
+				if (kill) {
+					kill();
+				}
+			});
 		}
 	};
 })
@@ -306,19 +459,24 @@ angular.module("dtn.directives", [])
 			this.notifyCompleted = function () {
 				var spinner = getSpinner();
 				if (spinner) {
-					spinner.addClass("hidden");	
+					spinner.addClass("hidden");
 				}
 			};
 			this.notifyBegun = function () {
 				var spinner = getSpinner();
 				if (spinner) {
-					spinner.removeClass("hidden");	
+					spinner.removeClass("hidden");
 				}
 			};
 		}]
 	};
 })
-.directive("entryImage", function ($timeout, entryImageProvider) {
+.directive("hoverTracker", function () {
+	return function (scope, element, attr) {
+		// element.append(angular.element("<div class='pegged pegged-" + (attr.hoverTracker || 'light') + "'>(--version)</div>"));
+	};
+})
+.directive("entryImage", function ($timeout, entryImageExtractor, entryImageProvider) {
 	return {
 		restrict : 'AC',
 		require : "?^entryImageListener",
@@ -340,6 +498,20 @@ angular.module("dtn.directives", [])
 				}
 				ele.addClass("hidden");
 			}
+
+			var lookupAndCache = function (entry) {
+				entryImageProvider.get(entry.link, function (src) {
+					//change only if not an empty string
+					if (src) {
+						if (listener) {
+							listener.notifyCompleted();
+						}
+						ele.attr("src", src);
+						ele.removeClass("hidden");
+					}
+				});
+			};
+
 			var kill = scope.$watch(function () {
 					return scope.$eval(attr.entryImage);
 				}, function (entry) {
@@ -347,15 +519,19 @@ angular.module("dtn.directives", [])
 						kill();
 						var link = entry.link;
 						$timeout(function () {
-							entryImageProvider.get(link, function (src) {
-								//change only if not an empty string
+							entryImageExtractor.get(entry)
+							.then(function (src) {
 								if (src) {
 									if (listener) {
 										listener.notifyCompleted();
 									}
 									ele.attr("src", src);
 									ele.removeClass("hidden");
+								}else {
+									lookupAndCache(entry);
 								}
+							}, function () {
+								lookupAndCache(entry);
 							});
 						});
 					}

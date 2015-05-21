@@ -320,7 +320,7 @@ angular.module('dtn.services', [])
 	};
 })
 
-.constant("defaultTitle", "Daily Times Nigeria")
+.constant("defaultTitle", "The Kuramo Report")
 
 .service("dtnAnchor", function () {
 	//ensure that all anchors target '_blank'
@@ -340,29 +340,39 @@ angular.module('dtn.services', [])
 })
 
 .factory("FeedSource", function ($q, dtnStore, Database) {
-	var sources = [{
-			name : "news",
-			title : "News",
-			url : "http://dailytimes.com.ng/category/news/feed/"
-		}, {
-			name : "politics",
-			title : "Politics",
-			url : "http://dailytimes.com.ng/category/politics/feed/"
-		}, {
-			url : "http://dailytimes.com.ng/category/business/feed/",
-			name : "business",
-			title : "Business"
-		}, {
-			name : "sport",
-			url : "http://dailytimes.com.ng/category/sport/feed/",
-			title : "Sport",
-			display : false
-		}, {
-			name : "sports",
-			url : "http://dailytimes.com.ng/category/sport/feed/",
-			title : "Sports"
+	// var sources = [{
+	// 		name : "news",
+	// 		title : "News",
+	// 		url : "http://dailytimes.com.ng/category/news/feed/"
+	// 	}, {
+	// 		name : "politics",
+	// 		title : "Politics",
+	// 		url : "http://dailytimes.com.ng/category/politics/feed/"
+	// 	}, {
+	// 		url : "http://dailytimes.com.ng/category/business/feed/",
+	// 		name : "business",
+	// 		title : "Business"
+	// 	}, {
+	// 		name : "sport",
+	// 		url : "http://dailytimes.com.ng/category/sport/feed/",
+	// 		title : "Sport",
+	// 		display : false
+	// 	}, {
+	// 		name : "sports",
+	// 		url : "http://dailytimes.com.ng/category/sport/feed/",
+	// 		title : "Sports"
+	// 	}
+	// ];
+
+	var sources = [
+		{
+			name : "trk",
+			title : "The Kuramo Report",
+			url : "http://tkr.com.ng/rss.xml",
+			display : true
 		}
 	];
+
 	var id = 0;
 
 	angular.forEach(sources, function (s) {
@@ -425,6 +435,82 @@ angular.module('dtn.services', [])
 			return new Date(val);
 		}
 		return val;
+	};
+})
+
+.filter("cleanContent", function () {
+	return function (str) {
+		var replace = '&lt;!-- google_ad_section_start --&gt;';
+		if (str) {
+			return str.replace(replace, '');
+		}
+		return str;
+	};
+})
+
+.service("entryImageExtractor", function ($q) {
+	var extractInline = function (source, cb) {
+		var content = source.content;
+		if (content) {
+			var PATTERN_OG = /rel\=["']og\:image/,
+				PATTERN_IMAGE = /<img .*src\=["'](\S+)["']/i;
+			var orgLocation = PATTERN_OG.exec(content);
+
+			if (orgLocation) {
+				PATTERN_IMAGE.lastIndex =
+					orgLocation.index + orgLocation[0].length;
+				var imageMatch = PATTERN_IMAGE.exec(content);
+				if (imageMatch) {
+					cb(imageMatch[1]);
+				}else {
+					cb(null);
+				}
+			}else {
+				cb(null);
+			}
+		}else {
+			cb(null);
+		}
+	};
+
+	var extractors = [];
+	extractors.push(extractInline);
+
+	var tryExtractors = function (index, source, cb) {
+		if (index < extractors.length) {
+			extractors[index](source, function (d, err) {
+				if (err) {
+					tryExtractors(index + 1, source, cb);
+				}else if (d) {
+					cb(d);
+				}else {
+					tryExtractors(index + 1, source, cb);
+				}
+			});
+		}else {
+			cb(null, new Error("not found"));
+		}
+	};
+
+	var DISABLE_OP = false;
+	var getImpl = function (entry) {
+		var deferred = $q.defer();
+		if (DISABLE_OP) {
+			deferred.resolve(null);
+		}else {
+			tryExtractors(0, entry, function (d, err) {
+				if (err) {
+					deferred.reject(err);
+				}else {
+					deferred.resolve(d);
+				}
+			});
+		}
+		return deferred.promise;
+	};
+
+	return {
+		get : getImpl
 	};
 })
 
